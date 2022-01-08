@@ -7,3 +7,5 @@ edition = "2018"
 
 [dependencies]
 ggez = "0.7"
+specs = { version = "0.17.0", features = ["specs-derive"] }
+glam = { version = "0.20.2", default-features = false }

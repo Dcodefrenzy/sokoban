@@ -1,29 +1,85 @@
+// main.rs
+// Rust sokoban
+// main.rs
 
-use ggez::{conf, event, Context, GameResult};
+use ggez::{conf, event::{self, KeyCode, KeyMods}, Context, GameResult};
+use specs::{RunNow, World, WorldExt};
 use std::path;
 
-// This struct will hold all our game state
-// For now there is nothing to be held, but we'll add
-// things shortly.
-struct Game {}
+mod components;
+mod constants;
+mod entities;
+mod map;
+mod resources;
+mod systems;
 
-// This is the main event loop. ggez tells us to implement
-// two things:
-// - updating
-// - rendering
+use crate::components::*;
+use crate::map::*;
+use crate::resources::*;
+use crate::systems::*;
+
+struct Game {
+    world: World,
+}
+
 impl event::EventHandler<ggez::GameError> for Game {
     fn update(&mut self, _context: &mut Context) -> GameResult {
-        // TODO: update game logic here
+        // Run input system
+        {
+            let mut is = InputSystem {};
+            is.run_now(&self.world);
+        }
+
         Ok(())
     }
 
-    fn draw(&mut self, _context: &mut Context) -> GameResult {
-        // TODO: update draw here
+    fn draw(&mut self, context: &mut Context) -> GameResult {
+        // Render game entities
+        {
+            let mut rs = RenderingSystem { context };
+            rs.run_now(&self.world);
+        }
+
         Ok(())
+    }
+
+    fn key_down_event(
+        &mut self,
+        _context: &mut Context,
+        keycode: KeyCode,
+        _keymod: KeyMods,
+        _repeat: bool,
+    ) {
+        println!("Key pressed: {:?}", keycode);
+
+        let mut input_queue = self.world.write_resource::<InputQueue>();
+        input_queue.keys_pressed.push(keycode);
     }
 }
 
+// Initialize the level
+pub fn initialize_level(world: &mut World) {
+    const MAP: &str = "
+    N N W W W W W W
+    W W W . . . . W
+    W . . . B . . W
+    W . . . . . . W 
+    W . P . . . . W
+    W . . . . . . W
+    W . . S . . . W
+    W . . . . . . W
+    W W W W W W W W
+    ";
+
+    load_map(world, MAP.to_string());
+}
+
 pub fn main() -> GameResult {
+    let mut world = World::new();
+    register_components(&mut world);
+    register_resources(&mut world);
+    initialize_level(&mut world);
+
     // Create a game context and event loop
     let context_builder = ggez::ContextBuilder::new("rust_sokoban", "sokoban")
         .window_setup(conf::WindowSetup::default().title("Rust Sokoban!"))
@@ -31,8 +87,9 @@ pub fn main() -> GameResult {
         .add_resource_path(path::PathBuf::from("./resources"));
 
     let (context, event_loop) = context_builder.build()?;
+
     // Create the game state
-    let game = Game {};
+    let game = Game { world };
     // Run the main event loop
     event::run(context, event_loop, game)
 }
