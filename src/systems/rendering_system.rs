@@ -1,6 +1,3 @@
-
-
-
 use crate::components::*;
 use crate::resources::*;
 use crate::constants::TILE_WIDTH;

@@ -3,6 +3,8 @@ use ggez::{audio, Context};
 use specs::{World, WorldExt};
 use std::collections::HashMap;
 
+
+//audio allows sounds during game play.
 #[derive(Default)]
 pub struct AudioStore {
     pub sounds: HashMap<String, audio::Source>,
